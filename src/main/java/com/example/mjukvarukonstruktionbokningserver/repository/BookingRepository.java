@@ -28,4 +28,6 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     void removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(String date, float starttime);
     @Transactional
     void removeBookingByDateAndEndTime(String date, float endtime);
+    @Transactional
+    void removeAllBookingByDateBefore(String date);
 }

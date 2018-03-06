@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TimeIntervalRepository extends JpaRepository<TimeInterval, Integer> {
 
+    TimeInterval findByStartTimeAndStopTime(float starttime, float stoptime);
+
 }

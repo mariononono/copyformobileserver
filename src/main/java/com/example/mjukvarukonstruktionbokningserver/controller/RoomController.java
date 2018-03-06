@@ -1,6 +1,5 @@
 package com.example.mjukvarukonstruktionbokningserver.controller;
 
-import com.example.mjukvarukonstruktionbokningserver.generators.QRCodeGenerator;
 import com.example.mjukvarukonstruktionbokningserver.model.Booking;
 import com.example.mjukvarukonstruktionbokningserver.model.Room;
 import com.example.mjukvarukonstruktionbokningserver.model.TimeInterval;
@@ -67,38 +66,7 @@ public class RoomController {
     @GetMapping("/rooms/{date}/{startTime}")
     public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") String date, @PathVariable(value = "startTime") float starttime) {
 
-        List<TimeInterval> timeIntervals = timeIntervalRepository.findAll();
-        List<String> starttimes = new ArrayList<>();
-        List<String> endtimes = new ArrayList<>();
-
-        for(int i = 0; i < timeIntervals.size(); i++) {
-            String tmpstart = Float.toString(timeIntervals.get(i).getStartTime());
-            String[] tmparraystart = tmpstart.split("\\.");
-            String tmpend = Float.toString(timeIntervals.get(i).getStopTime());
-            String[] tmparrayend = tmpend.split("\\.");
-            starttimes.add(tmparraystart[0]);
-            endtimes.add(tmparrayend[0]);
-        }
-
-        Date rightnow = Calendar.getInstance().getTime();
-
-        SimpleDateFormat parser = new SimpleDateFormat("HH:mm");
-        String now = parser.format(rightnow);
-
-        try {
-            Date userDate = parser.parse(now);
-            for(int i = 0; i < starttimes.size(); i++) {
-                if (userDate.after(parser.parse(starttimes.get(i) + ":15")) && userDate.before(parser.parse(endtimes.get(i) + ":00"))) {
-                    bookingRepository.removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(date, Float.parseFloat(starttimes.get(i)));
-                }
-                if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
-                    bookingRepository.removeBookingByDateAndEndTime(date, Float.parseFloat(endtimes.get(i)));
-                }
-            }
-
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        deleteIfNecesseary(date);
 
         List<Room> rooms = roomRepository.findAll();
         List<Booking> bookings = bookingRepository.findBookingByDateAndStartTime(date, starttime);
@@ -116,10 +84,10 @@ public class RoomController {
     }
 
     // Update a Room
-    @PutMapping("/admin/updaterooms/{id}")
-    public ResponseEntity<RoomViewModel> updateRoom(@PathVariable(value = "id") int roomId,
+    @PutMapping("/admin/updaterooms/{roomname}")
+    public ResponseEntity<RoomViewModel> updateRoom(@PathVariable(value = "roomname") String roomname,
                                            @Valid @RequestBody RoomViewModel roomDetails) {
-        Room room = roomRepository.findOne(roomId);
+        Room room = roomRepository.findByRoomName(roomname);
         if(room == null) {
             return ResponseEntity.notFound().build();
         }
@@ -139,9 +107,9 @@ public class RoomController {
     }
 
     // Delete a Room
-    @DeleteMapping("/admin/deleterooms/{id}")
-    public ResponseEntity<RoomViewModel> deleteRoom(@PathVariable(value = "id") int roomId) {
-        Room room = roomRepository.findOne(roomId);
+    @DeleteMapping("/admin/deleterooms/{roomname}")
+    public ResponseEntity<RoomViewModel> deleteRoom(@PathVariable(value = "roomname") String roomname) {
+        Room room = roomRepository.findByRoomName(roomname);
         if(room == null) {
             return ResponseEntity.notFound().build();
         }
@@ -155,6 +123,43 @@ public class RoomController {
     public List<Integer> getNumberOfFloors() {
         List<Integer> floors = roomRepository.findByFloor();
         return floors;
+    }
+
+    private void deleteIfNecesseary(String date){
+        List<TimeInterval> timeIntervals = timeIntervalRepository.findAll();
+        List<String> starttimes = new ArrayList<>();
+        List<String> endtimes = new ArrayList<>();
+
+        for(int i = 0; i < timeIntervals.size(); i++) {
+            String tmpstart = Float.toString(timeIntervals.get(i).getStartTime());
+            String[] tmparraystart = tmpstart.split("\\.");
+            String tmpend = Float.toString(timeIntervals.get(i).getStopTime());
+            String[] tmparrayend = tmpend.split("\\.");
+            starttimes.add(tmparraystart[0]);
+            endtimes.add(tmparrayend[0]);
+        }
+
+        Date rightnow = Calendar.getInstance().getTime();
+
+        SimpleDateFormat parser = new SimpleDateFormat("HH:mm");
+        String timenow = parser.format(rightnow);
+
+        try {
+            Date userDate = parser.parse(timenow);
+            for(int i = 0; i < starttimes.size(); i++) {
+                if (userDate.after(parser.parse(starttimes.get(i) + ":15")) && userDate.before(parser.parse(endtimes.get(i) + ":00"))) {
+                    bookingRepository.removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(date, Float.parseFloat(starttimes.get(i)));
+                }
+                if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
+                    bookingRepository.removeBookingByDateAndEndTime(date, Float.parseFloat(endtimes.get(i)));
+                }
+            }
+
+            bookingRepository.removeAllBookingByDateBefore(date);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     private List<RoomViewModel> convertToViewModel(List<Room> rooms) {

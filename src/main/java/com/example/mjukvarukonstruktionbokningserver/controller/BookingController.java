@@ -3,9 +3,11 @@ package com.example.mjukvarukonstruktionbokningserver.controller;
 import antlr.ASTNULLType;
 import com.example.mjukvarukonstruktionbokningserver.model.Booking;
 import com.example.mjukvarukonstruktionbokningserver.model.Room;
+import com.example.mjukvarukonstruktionbokningserver.model.TimeInterval;
 import com.example.mjukvarukonstruktionbokningserver.model.User;
 import com.example.mjukvarukonstruktionbokningserver.repository.BookingRepository;
 import com.example.mjukvarukonstruktionbokningserver.repository.RoomRepository;
+import com.example.mjukvarukonstruktionbokningserver.repository.TimeIntervalRepository;
 import com.example.mjukvarukonstruktionbokningserver.repository.UserRepository;
 import com.example.mjukvarukonstruktionbokningserver.viewmodel.BookingViewModel;
 import com.example.mjukvarukonstruktionbokningserver.viewmodel.RoomViewModel;
@@ -15,10 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.awt.print.Book;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 @RequestMapping("/")
@@ -30,11 +31,14 @@ public class BookingController {
     RoomRepository roomRepository;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    TimeIntervalRepository timeIntervalRepository;
 
 
     // Get All bookings
     @GetMapping("/admin/bookings")
     public List<BookingViewModel> getAllBookings() {
+        deleteIfNecesseary();
         return convertToViewModel(bookingRepository.findAll());
     }
 
@@ -68,6 +72,7 @@ public class BookingController {
     // Get a my bookings
     @GetMapping("/bookings/getbooking/{username}/")
     public List<BookingViewModel> getBookingByUsername(@PathVariable(value = "username") String username) {
+        deleteIfNecesseary();
         List<BookingViewModel> bookingViewModels = convertToViewModel(bookingRepository.findByUserNameEquals(username));
         List<BookingViewModel> bookingViewModels1 = convertToViewModel(bookingRepository.findBySecondaryUserNameEquals(username));
         bookingViewModels.addAll(bookingViewModels1);
@@ -156,6 +161,46 @@ public class BookingController {
             bmv.add(new BookingViewModel(bookings.get(i).getUserName(),bookings.get(i).getSecondaryUserName(), bookings.get(i).getStartTime(), bookings.get(i).getEndTime(), bookings.get(i).getRoomname(), bookings.get(i).getDate()));
         }
         return bmv;
+    }
+
+    private void deleteIfNecesseary(){
+        List<TimeInterval> timeIntervals = timeIntervalRepository.findAll();
+        List<String> starttimes = new ArrayList<>();
+        List<String> endtimes = new ArrayList<>();
+
+        for(int i = 0; i < timeIntervals.size(); i++) {
+            String tmpstart = Float.toString(timeIntervals.get(i).getStartTime());
+            String[] tmparraystart = tmpstart.split("\\.");
+            String tmpend = Float.toString(timeIntervals.get(i).getStopTime());
+            String[] tmparrayend = tmpend.split("\\.");
+            starttimes.add(tmparraystart[0]);
+            endtimes.add(tmparrayend[0]);
+        }
+
+        Date rightnow = Calendar.getInstance().getTime();
+
+        SimpleDateFormat parser = new SimpleDateFormat("HH:mm");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        String dateNow = dateFormat.format(rightnow);
+        String timenow = parser.format(rightnow);
+
+        try {
+            Date userDate = parser.parse(timenow);
+            for(int i = 0; i < starttimes.size(); i++) {
+                if (userDate.after(parser.parse(starttimes.get(i) + ":15")) && userDate.before(parser.parse(endtimes.get(i) + ":00"))) {
+                    bookingRepository.removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(dateNow, Float.parseFloat(starttimes.get(i)));
+                }
+                if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
+                    bookingRepository.removeBookingByDateAndEndTime(dateNow, Float.parseFloat(endtimes.get(i)));
+                }
+            }
+            bookingRepository.removeAllBookingByDateBefore(dateNow);
+
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -37,9 +37,9 @@ public class TimeIntervalController {
     }
 
     // Get a Single Room
-    @GetMapping("/timeInterval/getsingle/{id}")
-    public ResponseEntity<TimeIntervalViewModel> getNoteById(@PathVariable(value = "id") int timeIntervalId) {
-        TimeInterval timeInterval = timeIntervalRepository.findOne(timeIntervalId);
+    @GetMapping("/timeInterval/getsingle/{starttime}/{endtime}")
+    public ResponseEntity<TimeIntervalViewModel> getNoteById(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime) {
+        TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {
             return ResponseEntity.notFound().build();
         }
@@ -50,10 +50,10 @@ public class TimeIntervalController {
     }
 
     // Update a Room
-    @PutMapping("/timeInterval/update/{id}")
-    public ResponseEntity<TimeIntervalViewModel> updateNote(@PathVariable(value = "id") int timeIntervalId,
+    @PutMapping("/timeInterval/update/{starttime}/{endtime}")
+    public ResponseEntity<TimeIntervalViewModel> updateNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime,
                                            @Valid @RequestBody TimeIntervalViewModel timeIntervalDetails) {
-        TimeInterval timeInterval = timeIntervalRepository.findOne(timeIntervalId);
+        TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {
             return ResponseEntity.notFound().build();
         }
@@ -68,9 +68,9 @@ public class TimeIntervalController {
     }
 
     // Delete a Room
-    @DeleteMapping("/timeInterval/delete/{id}")
-    public ResponseEntity<TimeIntervalViewModel> deleteNote(@PathVariable(value = "id") int timeIntervalId) {
-        TimeInterval timeInterval = timeIntervalRepository.findOne(timeIntervalId);
+    @DeleteMapping("/timeInterval/delete/{starttime}/{endtime}")
+    public ResponseEntity<TimeIntervalViewModel> deleteNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime) {
+        TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {
             return ResponseEntity.notFound().build();
         }

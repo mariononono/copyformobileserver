@@ -15,15 +15,17 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 
 @RestController
 @RequestMapping("/")
 public class RoomController {
-
-    private static final String QR_CODE_IMAGE_PATH = "./MyQRCode";
 
     @Autowired
     RoomRepository roomRepository;
@@ -41,13 +43,6 @@ public class RoomController {
     // Create a new Room
     @PostMapping("/admin/addrooms")
     public Room createRoom(@Valid @RequestBody Room room) {
-        try {
-            new QRCodeGenerator().generateQRCodeImage(room.getQRcode(),350, 350, QR_CODE_IMAGE_PATH + room.getRoomName() + ".png");
-        } catch (WriterException e) {
-            System.out.println("Could not generate QR Code, WriterException :: " + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("Could not generate QR Code, IOException :: " + e.getMessage());
-        }
         Room r = roomRepository.save(room);
         return r;
     }
@@ -71,6 +66,40 @@ public class RoomController {
     // Get a Single Room
     @GetMapping("/rooms/{date}/{startTime}")
     public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") String date, @PathVariable(value = "startTime") float starttime) {
+
+        List<TimeInterval> timeIntervals = timeIntervalRepository.findAll();
+        List<String> starttimes = new ArrayList<>();
+        List<String> endtimes = new ArrayList<>();
+
+        for(int i = 0; i < timeIntervals.size(); i++) {
+            String tmpstart = Float.toString(timeIntervals.get(i).getStartTime());
+            String[] tmparraystart = tmpstart.split("\\.");
+            String tmpend = Float.toString(timeIntervals.get(i).getStopTime());
+            String[] tmparrayend = tmpend.split("\\.");
+            starttimes.add(tmparraystart[0]);
+            endtimes.add(tmparrayend[0]);
+        }
+
+        Date rightnow = Calendar.getInstance().getTime();
+
+        SimpleDateFormat parser = new SimpleDateFormat("HH:mm");
+        String now = parser.format(rightnow);
+
+        try {
+            Date userDate = parser.parse(now);
+            for(int i = 0; i < starttimes.size(); i++) {
+                if (userDate.after(parser.parse(starttimes.get(i) + ":15")) && userDate.before(parser.parse(endtimes.get(i) + ":00"))) {
+                    bookingRepository.removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(date, Float.parseFloat(starttimes.get(i)));
+                }
+                if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
+                    bookingRepository.removeBookingByDateAndEndTime(date, Float.parseFloat(endtimes.get(i)));
+                }
+            }
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
         List<Room> rooms = roomRepository.findAll();
         List<Booking> bookings = bookingRepository.findBookingByDateAndStartTime(date, starttime);
 

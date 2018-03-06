@@ -3,8 +3,10 @@ package com.example.mjukvarukonstruktionbokningserver.controller;
 import antlr.ASTNULLType;
 import com.example.mjukvarukonstruktionbokningserver.model.Booking;
 import com.example.mjukvarukonstruktionbokningserver.model.Room;
+import com.example.mjukvarukonstruktionbokningserver.model.User;
 import com.example.mjukvarukonstruktionbokningserver.repository.BookingRepository;
 import com.example.mjukvarukonstruktionbokningserver.repository.RoomRepository;
+import com.example.mjukvarukonstruktionbokningserver.repository.UserRepository;
 import com.example.mjukvarukonstruktionbokningserver.viewmodel.BookingViewModel;
 import com.example.mjukvarukonstruktionbokningserver.viewmodel.RoomViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ public class BookingController {
     BookingRepository bookingRepository;
     @Autowired
     RoomRepository roomRepository;
+    @Autowired
+    UserRepository userRepository;
+
 
     // Get All bookings
     @GetMapping("/admin/bookings")
@@ -36,6 +41,13 @@ public class BookingController {
     // Create a new Booking
     @PostMapping("/bookings/create")
     public Booking createBooking(@Valid @RequestBody Booking booking) {
+        User user = userRepository.findByUserName(booking.getUserName());
+        if(user != null) {
+            if (user.isAdmin()) {
+                booking.setCheckedIn(true);
+                booking.setSecondaryCheckIn(true);
+            }
+        }
         Booking b = bookingRepository.save(booking);
         return b;
     }
@@ -91,7 +103,7 @@ public class BookingController {
     }
 
     // Update a Booking
-    @PutMapping("/bookings/updatebooking/{username}/{date}/{time}/")
+    @PutMapping("/bookings/updatebooking/{username}/{date}/{starttime}/")
     public ResponseEntity<BookingViewModel> updateBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime,
                                            @Valid @RequestBody BookingViewModel bookingDetails) {
         Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(username, date, starttime);
@@ -111,6 +123,19 @@ public class BookingController {
         return ResponseEntity.ok(bookingDetails);
     }
 
+    @PutMapping("/bookings/updatebooking/confirm/{secondary_username}/{date}/{starttime}/")
+    public ResponseEntity<BookingViewModel> confirmBooking(@PathVariable(value = "secondary_username") String secondaryUsername, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime) {
+        Booking booking = bookingRepository.findBookingBySecondaryUserNameAndDateAndStartTimeEquals(secondaryUsername, date, starttime);
+        if(booking == null) {
+            return ResponseEntity.notFound().build();
+        }
+        booking.setConfirmation(true);
+
+        bookingRepository.save(booking);
+        BookingViewModel bookingViewModel = new BookingViewModel(booking.getUserName(), booking.getSecondaryUserName(), booking.getStartTime(), booking.getEndTime(), booking.getRoomname(), booking.getDate());
+        return ResponseEntity.ok(bookingViewModel);
+    }
+
     // Delete a Room
     @DeleteMapping("/bookings/deletebooking/{username}/{date}/{time}/")
     public ResponseEntity<BookingViewModel> deleteBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime) {
@@ -128,7 +153,7 @@ public class BookingController {
         List<BookingViewModel> bmv = new ArrayList<>();
 
         for(int i = 0; i<bookings.size();i++) {
-            bmv.add(new BookingViewModel(bookings.get(i).getId(), bookings.get(i).getUserName(),bookings.get(i).getSecondaryUserName(), bookings.get(i).getStartTime(), bookings.get(i).getEndTime(), bookings.get(i).getRoomname(), bookings.get(i).getDate()));
+            bmv.add(new BookingViewModel(bookings.get(i).getUserName(),bookings.get(i).getSecondaryUserName(), bookings.get(i).getStartTime(), bookings.get(i).getEndTime(), bookings.get(i).getRoomname(), bookings.get(i).getDate()));
         }
         return bmv;
     }

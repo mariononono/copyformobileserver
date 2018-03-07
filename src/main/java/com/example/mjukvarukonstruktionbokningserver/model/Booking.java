@@ -43,9 +43,6 @@ public class Booking implements Serializable {
     @Column(name = "date", nullable = false)
     private String date;
 
-    @Column(name = "confirmation")
-    private boolean confirmation;
-
     public int getId() {
         return id;
     }
@@ -119,11 +116,4 @@ public class Booking implements Serializable {
         this.date = date;
     }
 
-    public boolean isConfirmation() {
-        return confirmation;
-    }
-
-    public void setConfirmation(boolean confirmation) {
-        this.confirmation = confirmation;
-    }
 }

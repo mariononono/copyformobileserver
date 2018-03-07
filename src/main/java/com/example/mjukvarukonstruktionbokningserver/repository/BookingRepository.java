@@ -22,6 +22,9 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     Booking findBookingByUserNameAndDateAndStartTimeEquals(String username, String date, float starttime);
 
+    Booking findBookingBySecondaryUserNameAndDateAndStartTimeAndRoomnameEquals(String secondaryUserName, String date, float starttime, String roomname);
+
+
     Booking findBookingBySecondaryUserNameAndDateAndStartTimeEquals(String secondaryUserName, String date, float starttime);
 
     @Transactional
@@ -30,4 +33,6 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     void removeBookingByDateAndEndTime(String date, float endtime);
     @Transactional
     void removeAllBookingByDateBefore(String date);
+   /* @Transactional
+    void removeBookingByUserNameAndDateAndStartTime(String username, String date, float starttime);*/
 }

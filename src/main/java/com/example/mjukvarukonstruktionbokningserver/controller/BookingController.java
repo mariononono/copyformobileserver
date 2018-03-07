@@ -38,7 +38,7 @@ public class BookingController {
     // Get All bookings
     @GetMapping("/admin/bookings")
     public List<BookingViewModel> getAllBookings() {
-        deleteIfNecesseary();
+      //  deleteIfNecesseary();
         return convertToViewModel(bookingRepository.findAll());
     }
 
@@ -47,11 +47,12 @@ public class BookingController {
     public Booking createBooking(@Valid @RequestBody Booking booking) {
         User user = userRepository.findByUserName(booking.getUserName());
         if(user != null) {
-            if (user.isAdmin()) {
+            if (user.isAdmin() || user.getAffiliation().equals("teacher")) {
                 booking.setCheckedIn(true);
                 booking.setSecondaryCheckIn(true);
             }
         }
+
         Booking b = bookingRepository.save(booking);
         return b;
     }
@@ -72,14 +73,16 @@ public class BookingController {
     // Get a my bookings
     @GetMapping("/bookings/getbooking/{username}/")
     public List<BookingViewModel> getBookingByUsername(@PathVariable(value = "username") String username) {
-        deleteIfNecesseary();
+        //deleteIfNecesseary();
+
+
         List<BookingViewModel> bookingViewModels = convertToViewModel(bookingRepository.findByUserNameEquals(username));
         List<BookingViewModel> bookingViewModels1 = convertToViewModel(bookingRepository.findBySecondaryUserNameEquals(username));
         bookingViewModels.addAll(bookingViewModels1);
         return bookingViewModels;
     }
 
-    // Update a Room
+    // testa med post... eller sök på put
     @PutMapping("/bookings/checkin/{username}/{date}/{starttime}/{qr}/")
     public ResponseEntity<Booking> updateBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime, @PathVariable(value = "qr") String qr) {
         Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(username, date, starttime);
@@ -110,7 +113,7 @@ public class BookingController {
     // Update a Booking
     @PutMapping("/bookings/updatebooking/{username}/{date}/{starttime}/")
     public ResponseEntity<BookingViewModel> updateBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime,
-                                           @Valid @RequestBody BookingViewModel bookingDetails) {
+                                           @Valid @RequestBody Booking bookingDetails) {
         Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(username, date, starttime);
         if(booking == null) {
             return ResponseEntity.notFound().build();
@@ -122,35 +125,47 @@ public class BookingController {
         booking.setEndTime(bookingDetails.getEndTime());
         booking.setSecondaryUserName(bookingDetails.getSecondaryUserName());
 
-
-        Booking updatedbooking = bookingRepository.save(booking);
-       // BookingViewModel bookingViewModel = new BookingViewModel(updatedbooking.getId(), updatedbooking.getUserName(), updatedbooking.getSecondaryUserName(), updatedbooking.getStartTime(), updatedbooking.getEndTime(), updatedbooking.getRoomname(), updatedbooking.getDate());
-        return ResponseEntity.ok(bookingDetails);
-    }
-
-    @PutMapping("/bookings/updatebooking/confirm/{secondary_username}/{date}/{starttime}/")
-    public ResponseEntity<BookingViewModel> confirmBooking(@PathVariable(value = "secondary_username") String secondaryUsername, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime) {
-        Booking booking = bookingRepository.findBookingBySecondaryUserNameAndDateAndStartTimeEquals(secondaryUsername, date, starttime);
-        if(booking == null) {
-            return ResponseEntity.notFound().build();
-        }
-        booking.setConfirmation(true);
-
         bookingRepository.save(booking);
         BookingViewModel bookingViewModel = new BookingViewModel(booking.getUserName(), booking.getSecondaryUserName(), booking.getStartTime(), booking.getEndTime(), booking.getRoomname(), booking.getDate());
         return ResponseEntity.ok(bookingViewModel);
     }
 
-    // Delete a Room
-    @DeleteMapping("/bookings/deletebooking/{username}/{date}/{time}/")
-    public ResponseEntity<BookingViewModel> deleteBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime) {
-        Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(username, date, starttime);
+    // Delete booking
+    @DeleteMapping("/bookings/deletebooking/")
+    public boolean deleteBooking(@Valid @RequestBody Booking bookingDetails) {
+        Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(bookingDetails.getUserName(), bookingDetails.getDate(), bookingDetails.getStartTime());
+
         if(booking == null) {
-            return ResponseEntity.notFound().build();
+            return false;
+        }
+
+        float starttime = bookingDetails.getStartTime();
+        float before = starttime - 2;
+
+        String tmpstart = Float.toString(starttime);
+        String[] tmparraystart = tmpstart.split("\\.");
+        String tmpbefore = Float.toString(before);
+        String[] tmparraybefore = tmpbefore.split("\\.");
+
+        Date rightnow = Calendar.getInstance().getTime();
+
+        SimpleDateFormat parser = new SimpleDateFormat("HH:mm");
+        String timenow = parser.format(rightnow);
+
+        try {
+            Date userTime = parser.parse(timenow);
+            Date startTime = parser.parse(tmparraystart[0] + ":00");
+            Date beforTime = parser.parse(tmparraybefore[0] + ":00");
+
+            if (userTime.after(beforTime) && userTime.before(startTime)) {
+                    return false;
+                }
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
 
         bookingRepository.delete(booking);
-        return ResponseEntity.ok().build();
+        return true;
     }
 
     private List<BookingViewModel> convertToViewModel(List<Booking> bookings) {
@@ -195,6 +210,7 @@ public class BookingController {
                     bookingRepository.removeBookingByDateAndEndTime(dateNow, Float.parseFloat(endtimes.get(i)));
                 }
             }
+
             bookingRepository.removeAllBookingByDateBefore(dateNow);
 
 

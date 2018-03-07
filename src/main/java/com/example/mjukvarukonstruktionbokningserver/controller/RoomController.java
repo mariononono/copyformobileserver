@@ -66,7 +66,7 @@ public class RoomController {
     @GetMapping("/rooms/{date}/{startTime}")
     public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") String date, @PathVariable(value = "startTime") float starttime) {
 
-        deleteIfNecesseary(date);
+      //  deleteIfNecesseary(date);
 
         List<Room> rooms = roomRepository.findAll();
         List<Booking> bookings = bookingRepository.findBookingByDateAndStartTime(date, starttime);
@@ -149,8 +149,7 @@ public class RoomController {
             for(int i = 0; i < starttimes.size(); i++) {
                 if (userDate.after(parser.parse(starttimes.get(i) + ":15")) && userDate.before(parser.parse(endtimes.get(i) + ":00"))) {
                     bookingRepository.removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(date, Float.parseFloat(starttimes.get(i)));
-                }
-                if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
+                } else if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
                     bookingRepository.removeBookingByDateAndEndTime(date, Float.parseFloat(endtimes.get(i)));
                 }
             }

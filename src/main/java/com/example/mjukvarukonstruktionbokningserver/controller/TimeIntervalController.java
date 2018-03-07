@@ -52,7 +52,7 @@ public class TimeIntervalController {
     // Update a Room
     @PutMapping("/timeInterval/update/{starttime}/{endtime}")
     public ResponseEntity<TimeIntervalViewModel> updateNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime,
-                                           @Valid @RequestBody TimeIntervalViewModel timeIntervalDetails) {
+                                           @Valid @RequestBody TimeInterval timeIntervalDetails) {
         TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {
             return ResponseEntity.notFound().build();
@@ -69,15 +69,16 @@ public class TimeIntervalController {
 
     // Delete a Room
     @DeleteMapping("/timeInterval/delete/{starttime}/{endtime}")
-    public ResponseEntity<TimeIntervalViewModel> deleteNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime) {
+    public boolean deleteNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime) {
         TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {
-            return ResponseEntity.notFound().build();
+            return false;
+
         }
 
         timeIntervalRepository.delete(timeInterval);
 
-        return ResponseEntity.ok().build();
+        return true;
     }
 
     private List<TimeIntervalViewModel> convertToViewModel(List<TimeInterval> timeIntervals) {

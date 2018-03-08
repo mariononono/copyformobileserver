@@ -1,6 +1,5 @@
 package com.example.mjukvarukonstruktionbokningserver.controller;
 
-import antlr.ASTNULLType;
 import com.example.mjukvarukonstruktionbokningserver.model.Booking;
 import com.example.mjukvarukonstruktionbokningserver.model.Room;
 import com.example.mjukvarukonstruktionbokningserver.model.TimeInterval;
@@ -10,13 +9,12 @@ import com.example.mjukvarukonstruktionbokningserver.repository.RoomRepository;
 import com.example.mjukvarukonstruktionbokningserver.repository.TimeIntervalRepository;
 import com.example.mjukvarukonstruktionbokningserver.repository.UserRepository;
 import com.example.mjukvarukonstruktionbokningserver.viewmodel.BookingViewModel;
-import com.example.mjukvarukonstruktionbokningserver.viewmodel.RoomViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.awt.print.Book;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -38,28 +36,37 @@ public class BookingController {
     // Get All bookings
     @GetMapping("/admin/bookings")
     public List<BookingViewModel> getAllBookings() {
-      //  deleteIfNecesseary();
+        deleteIfNecesseary();
         return convertToViewModel(bookingRepository.findAll());
     }
 
     // Create a new Booking
     @PostMapping("/bookings/create")
-    public Booking createBooking(@Valid @RequestBody Booking booking) {
+    public boolean createBooking(@Valid @RequestBody Booking booking) {
         User user = userRepository.findByUserName(booking.getUserName());
         if(user != null) {
             if (user.isAdmin() || user.getAffiliation().equals("teacher")) {
-                booking.setCheckedIn(true);
-                booking.setSecondaryCheckIn(true);
+                booking.setChecked(true);
+                booking.setSecondaryChecked(true);
             }
+            Booking isexisting = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(booking.getUserName(), booking.getDate(), booking.getStartTime());
+
+            if(isexisting != null && !user.getAffiliation().equals("teacher"))
+                return false;
+
+            isexisting = bookingRepository.findBookingBySecondaryUserNameAndDateAndStartTimeEquals(booking.getUserName(), booking.getDate(), booking.getStartTime());
+
+            if(isexisting != null && !user.getAffiliation().equals("teacher"))
+                return false;
         }
 
         Booking b = bookingRepository.save(booking);
-        return b;
+        return true;
     }
 
     // Get a Single Room
     @GetMapping("/bookings/{username}/{date}/{starttime}/")
-    public ResponseEntity<Booking> getBookingById(@PathVariable(value = "username") String username, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime) {
+    public ResponseEntity<Booking> getBookingById(@PathVariable(value = "username") String username, @PathVariable(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date, @PathVariable(value = "starttime") float starttime) {
         Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(username, date, starttime);
         if(booking == null) {
             booking = bookingRepository.findBookingBySecondaryUserNameAndDateAndStartTimeEquals(username, date, starttime);
@@ -73,7 +80,7 @@ public class BookingController {
     // Get a my bookings
     @GetMapping("/bookings/getbooking/{username}/")
     public List<BookingViewModel> getBookingByUsername(@PathVariable(value = "username") String username) {
-        //deleteIfNecesseary();
+        deleteIfNecesseary();
 
 
         List<BookingViewModel> bookingViewModels = convertToViewModel(bookingRepository.findByUserNameEquals(username));
@@ -84,7 +91,7 @@ public class BookingController {
 
     // testa med post... eller sök på put
     @PutMapping("/bookings/checkin/{username}/{date}/{starttime}/{qr}/")
-    public ResponseEntity<Booking> updateBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime, @PathVariable(value = "qr") String qr) {
+    public ResponseEntity<BookingViewModel> updateBooking(@PathVariable(value = "username") String username, @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date, @PathVariable(value = "starttime") float starttime, @PathVariable(value = "qr") String qr) {
         Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(username, date, starttime);
         if(booking == null) {
             booking = bookingRepository.findBookingBySecondaryUserNameAndDateAndStartTimeEquals(username, date, starttime);
@@ -98,25 +105,28 @@ public class BookingController {
             return ResponseEntity.notFound().build();
         }
 
-        if(username.equals(booking.getUserName()) && !booking.isCheckedIn()) {
-            if(qr.equals(room.getQRcode()))
-                booking.setCheckedIn(true);
-        } else if(username.equals(booking.getSecondaryUserName()) && !booking.isSecondaryCheckIn()) {
-            if(qr.equals(room.getQRcode()))
-                booking.setSecondaryCheckIn(true);
+        if(username.equals(booking.getUserName()) && !booking.isChecked()) {
+            if(qr.equals(room.getQrcode()))
+                booking.setChecked(true);
+        } else if(username.equals(booking.getSecondaryUserName()) && !booking.isSecondaryChecked()) {
+            if(qr.equals(room.getQrcode()))
+                booking.setSecondaryChecked(true);
         }
 
         Booking updatedbooking = bookingRepository.save(booking);
-        return ResponseEntity.ok(updatedbooking);
+
+        BookingViewModel bookingViewModel = new BookingViewModel(updatedbooking.getUserName(), updatedbooking.getSecondaryUserName(), updatedbooking.getStartTime(), updatedbooking.getEndTime(), updatedbooking.getRoomname(), updatedbooking.isChecked(), updatedbooking.isSecondaryChecked(), updatedbooking.getDate());
+
+        return ResponseEntity.ok(bookingViewModel);
     }
 
     // Update a Booking
     @PutMapping("/bookings/updatebooking/{username}/{date}/{starttime}/")
-    public ResponseEntity<BookingViewModel> updateBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") String date, @PathVariable(value = "starttime") float starttime,
+    public boolean updateBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date, @PathVariable(value = "starttime") float starttime,
                                            @Valid @RequestBody Booking bookingDetails) {
         Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(username, date, starttime);
         if(booking == null) {
-            return ResponseEntity.notFound().build();
+            return false;
         }
         booking.setUserName(bookingDetails.getUserName());
         booking.setStartTime(bookingDetails.getStartTime());
@@ -126,8 +136,7 @@ public class BookingController {
         booking.setSecondaryUserName(bookingDetails.getSecondaryUserName());
 
         bookingRepository.save(booking);
-        BookingViewModel bookingViewModel = new BookingViewModel(booking.getUserName(), booking.getSecondaryUserName(), booking.getStartTime(), booking.getEndTime(), booking.getRoomname(), booking.getDate());
-        return ResponseEntity.ok(bookingViewModel);
+        return true;
     }
 
     // Delete booking
@@ -173,12 +182,12 @@ public class BookingController {
         List<BookingViewModel> bmv = new ArrayList<>();
 
         for(int i = 0; i<bookings.size();i++) {
-            bmv.add(new BookingViewModel(bookings.get(i).getUserName(),bookings.get(i).getSecondaryUserName(), bookings.get(i).getStartTime(), bookings.get(i).getEndTime(), bookings.get(i).getRoomname(), bookings.get(i).getDate()));
+            bmv.add(new BookingViewModel(bookings.get(i).getUserName(),bookings.get(i).getSecondaryUserName(), bookings.get(i).getStartTime(), bookings.get(i).getEndTime(), bookings.get(i).getRoomname(), bookings.get(i).isChecked(), bookings.get(i).isSecondaryChecked(), bookings.get(i).getDate()));
         }
         return bmv;
     }
 
-    private void deleteIfNecesseary(){
+    public void deleteIfNecesseary(){
         List<TimeInterval> timeIntervals = timeIntervalRepository.findAll();
         List<String> starttimes = new ArrayList<>();
         List<String> endtimes = new ArrayList<>();
@@ -193,30 +202,33 @@ public class BookingController {
         }
 
         Date rightnow = Calendar.getInstance().getTime();
+        Date rnow = new Date();
 
         SimpleDateFormat parser = new SimpleDateFormat("HH:mm");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-        String dateNow = dateFormat.format(rightnow);
+        String dateNow = dateFormat.format(rnow);
         String timenow = parser.format(rightnow);
 
         try {
             Date userDate = parser.parse(timenow);
+            Date now = dateFormat.parse(dateNow);
             for(int i = 0; i < starttimes.size(); i++) {
                 if (userDate.after(parser.parse(starttimes.get(i) + ":15")) && userDate.before(parser.parse(endtimes.get(i) + ":00"))) {
-                    bookingRepository.removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(dateNow, Float.parseFloat(starttimes.get(i)));
+                    bookingRepository.removeBookingByDateAndStartTimeAndCheckedEquals(now, Float.parseFloat(starttimes.get(i)), false);
+                    bookingRepository.removeBookingByDateAndStartTimeAndSecondaryCheckedEquals(now, Float.parseFloat(starttimes.get(i)), false);
                 }
                 if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
-                    bookingRepository.removeBookingByDateAndEndTime(dateNow, Float.parseFloat(endtimes.get(i)));
+                    bookingRepository.removeBookingByDateAndEndTime(now, Float.parseFloat(endtimes.get(i)));
                 }
             }
 
-            bookingRepository.removeAllBookingByDateBefore(dateNow);
-
+            bookingRepository.removeByDateBefore(now);
 
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
     }
 
 }

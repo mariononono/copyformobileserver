@@ -9,6 +9,7 @@ import com.example.mjukvarukonstruktionbokningserver.repository.TimeIntervalRepo
 import com.example.mjukvarukonstruktionbokningserver.viewmodel.RoomViewModel;
 import com.google.zxing.WriterException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,9 +42,17 @@ public class RoomController {
 
     // Create a new Room
     @PostMapping("/admin/addrooms")
-    public Room createRoom(@Valid @RequestBody Room room) {
+    public boolean createRoom(@Valid @RequestBody Room room) {
+
+        Room isexisitingroom = roomRepository.findByRoomName(room.getRoomName());
+        Room isexisitingqr = roomRepository.findByQrcode(room.getQrcode());
+
+        if(isexisitingroom != null || isexisitingqr != null) {
+            return false;
+        }
+
         Room r = roomRepository.save(room);
-        return r;
+        return true;
     }
 
     @GetMapping("/admin/rooms/{room_name}")
@@ -64,12 +73,13 @@ public class RoomController {
 
     // Get a Single Room
     @GetMapping("/rooms/{date}/{startTime}")
-    public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") String date, @PathVariable(value = "startTime") float starttime) {
+    public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date, @PathVariable(value = "startTime") float starttime) {
 
-      //  deleteIfNecesseary(date);
+        deleteIfNecesseary();
 
         List<Room> rooms = roomRepository.findAll();
         List<Booking> bookings = bookingRepository.findBookingByDateAndStartTime(date, starttime);
+
 
         for(int i = 0;i<rooms.size();i++) {
             for(int j=0;j<bookings.size();j++) {
@@ -85,11 +95,11 @@ public class RoomController {
 
     // Update a Room
     @PutMapping("/admin/updaterooms/{roomname}")
-    public ResponseEntity<RoomViewModel> updateRoom(@PathVariable(value = "roomname") String roomname,
-                                           @Valid @RequestBody RoomViewModel roomDetails) {
+    public boolean updateRoom(@PathVariable(value = "roomname") String roomname,
+                                           @Valid @RequestBody Room roomDetails) {
         Room room = roomRepository.findByRoomName(roomname);
         if(room == null) {
-            return ResponseEntity.notFound().build();
+            return false;
         }
         room.setRoomName(roomDetails.getRoomName());
         room.setTYPE(roomDetails.getTYPE());
@@ -97,25 +107,22 @@ public class RoomController {
         room.setBookableRKH(roomDetails.isBookableRKH());
         room.setCapacity(roomDetails.getCapacity());
         room.setFloor(roomDetails.getFloor());
-        room.setQRcode(roomDetails.getQRcode());
-
+        room.setQrcode(roomDetails.getQrcode());
 
         Room updatedroom = roomRepository.save(room);
-        RoomViewModel rvm = new RoomViewModel(updatedroom.getRoomName(), updatedroom.getTYPE(), updatedroom.getQRcode(), updatedroom.getFloor(), updatedroom.getCapacity(), updatedroom.isBookableKTH(), updatedroom.isBookableRKH());
-
-        return ResponseEntity.ok(rvm);
+        return true;
     }
 
     // Delete a Room
     @DeleteMapping("/admin/deleterooms/{roomname}")
-    public ResponseEntity<RoomViewModel> deleteRoom(@PathVariable(value = "roomname") String roomname) {
+    public boolean deleteRoom(@PathVariable(value = "roomname") String roomname) {
         Room room = roomRepository.findByRoomName(roomname);
         if(room == null) {
-            return ResponseEntity.notFound().build();
+            return false;
         }
 
         roomRepository.delete(room);
-        return ResponseEntity.ok().build();
+        return true;
     }
 
     // Get a Single Room
@@ -125,7 +132,7 @@ public class RoomController {
         return floors;
     }
 
-    private void deleteIfNecesseary(String date){
+    public void deleteIfNecesseary(){
         List<TimeInterval> timeIntervals = timeIntervalRepository.findAll();
         List<String> starttimes = new ArrayList<>();
         List<String> endtimes = new ArrayList<>();
@@ -140,25 +147,33 @@ public class RoomController {
         }
 
         Date rightnow = Calendar.getInstance().getTime();
+        Date rnow = new Date();
 
         SimpleDateFormat parser = new SimpleDateFormat("HH:mm");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        String dateNow = dateFormat.format(rnow);
         String timenow = parser.format(rightnow);
 
         try {
             Date userDate = parser.parse(timenow);
+            Date now = dateFormat.parse(dateNow);
             for(int i = 0; i < starttimes.size(); i++) {
                 if (userDate.after(parser.parse(starttimes.get(i) + ":15")) && userDate.before(parser.parse(endtimes.get(i) + ":00"))) {
-                    bookingRepository.removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(date, Float.parseFloat(starttimes.get(i)));
-                } else if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
-                    bookingRepository.removeBookingByDateAndEndTime(date, Float.parseFloat(endtimes.get(i)));
+                    bookingRepository.removeBookingByDateAndStartTimeAndCheckedEquals(now, Float.parseFloat(starttimes.get(i)), false);
+                    bookingRepository.removeBookingByDateAndStartTimeAndSecondaryCheckedEquals(now, Float.parseFloat(starttimes.get(i)), false);
+                }
+                if(userDate.after(parser.parse(endtimes.get(i) + ":00"))) {
+                    bookingRepository.removeBookingByDateAndEndTime(now, Float.parseFloat(endtimes.get(i)));
                 }
             }
 
-            bookingRepository.removeAllBookingByDateBefore(date);
+              bookingRepository.removeByDateBefore(now);
 
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
     }
 
     private List<RoomViewModel> convertToViewModel(List<Room> rooms) {
@@ -166,7 +181,7 @@ public class RoomController {
         List<RoomViewModel> rmv = new ArrayList<>();
 
         for(int i = 0; i<rooms.size();i++) {
-            rmv.add(new RoomViewModel(rooms.get(i).getRoomName(), rooms.get(i).getTYPE(), rooms.get(i).getQRcode(), rooms.get(i).getFloor(), rooms.get(i).getCapacity(), rooms.get(i).isBookableKTH(), rooms.get(i).isBookableRKH()));
+            rmv.add(new RoomViewModel(rooms.get(i).getRoomName(), rooms.get(i).getTYPE(), rooms.get(i).getQrcode(), rooms.get(i).getFloor(), rooms.get(i).getCapacity(), rooms.get(i).isBookableKTH(), rooms.get(i).isBookableRKH()));
         }
         return rmv;
     }

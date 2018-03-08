@@ -26,10 +26,10 @@ public class Booking implements Serializable {
     private String secondaryUserName;
 
     @Column(name = "checkedin")
-    private boolean checkedIn;
+    private boolean checked;
 
     @Column(name = "secondary_checkin")
-    private boolean secondaryCheckIn;
+    private boolean secondaryChecked;
 
     @Column(name = "starttime", updatable = false)
     private float startTime;
@@ -41,7 +41,7 @@ public class Booking implements Serializable {
     private String roomname;
 
     @Column(name = "date", nullable = false)
-    private String date;
+    private Date date;
 
     public int getId() {
         return id;
@@ -59,12 +59,12 @@ public class Booking implements Serializable {
         this.userName = userName;
     }
 
-    public boolean isCheckedIn() {
-        return checkedIn;
+    public boolean isChecked() {
+        return checked;
     }
 
-    public void setCheckedIn(boolean checkedIn) {
-        this.checkedIn = checkedIn;
+    public void setChecked(boolean checked) {
+        this.checked = checked;
     }
 
     public float getStartTime() {
@@ -84,12 +84,12 @@ public class Booking implements Serializable {
         this.roomname = roomname;
     }
 
-    public boolean isSecondaryCheckIn() {
-        return secondaryCheckIn;
+    public boolean isSecondaryChecked() {
+        return secondaryChecked;
     }
 
-    public void setSecondaryCheckIn(boolean secondaryCheckIn) {
-        this.secondaryCheckIn = secondaryCheckIn;
+    public void setSecondaryChecked(boolean secondaryChecked) {
+        this.secondaryChecked = secondaryChecked;
     }
 
     public float getEndTime() {
@@ -108,12 +108,11 @@ public class Booking implements Serializable {
         this.secondaryUserName = secondaryUserName;
     }
 
-    public String getDate() {
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(Date date) {
         this.date = date;
     }
-
 }

@@ -18,21 +18,25 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     List<Booking> findBySecondaryUserNameEquals(String secondaryUserName);
 
-    List<Booking> findBookingByDateAndStartTime(String date, float starttime);
+    List<Booking> findBookingByDateAndStartTime(Date date, float starttime);
 
-    Booking findBookingByUserNameAndDateAndStartTimeEquals(String username, String date, float starttime);
+    Booking findBookingByUserNameAndDateAndStartTimeEquals(String username, Date date, float starttime);
 
-    Booking findBookingBySecondaryUserNameAndDateAndStartTimeAndRoomnameEquals(String secondaryUserName, String date, float starttime, String roomname);
+    Booking findBookingBySecondaryUserNameAndDateAndStartTimeAndRoomnameEquals(String secondaryUserName, Date date, float starttime, String roomname);
 
 
-    Booking findBookingBySecondaryUserNameAndDateAndStartTimeEquals(String secondaryUserName, String date, float starttime);
+    Booking findBookingBySecondaryUserNameAndDateAndStartTimeEquals(String secondaryUserName, Date date, float starttime);
 
     @Transactional
-    void removeBookingByDateAndStartTimeAndCheckedInFalseOrSecondaryCheckInFalse(String date, float starttime);
+    void removeBookingByDateAndStartTimeAndCheckedEquals(Date date, float starttime, boolean checked);
     @Transactional
-    void removeBookingByDateAndEndTime(String date, float endtime);
+    void removeBookingByDateAndStartTimeAndSecondaryCheckedEquals(Date date, float starttime, boolean secondaryChecked);
     @Transactional
-    void removeAllBookingByDateBefore(String date);
+    void removeBookingByDateAndStartTime(Date date, float starttime);
+    @Transactional
+    void removeBookingByDateAndEndTime(Date date, float endtime);
+    @Transactional
+    void removeByDateBefore(Date date);
    /* @Transactional
     void removeBookingByUserNameAndDateAndStartTime(String username, String date, float starttime);*/
 }

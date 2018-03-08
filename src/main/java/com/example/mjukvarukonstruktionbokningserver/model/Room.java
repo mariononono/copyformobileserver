@@ -19,7 +19,7 @@ public class Room implements Serializable {
     private String roomName;
 
     @Column(name = "qrcode", unique = true)
-    private String QRcode;
+    private String qrcode;
 
     @Column(name = "type")
     private String TYPE;
@@ -52,12 +52,12 @@ public class Room implements Serializable {
         this.roomName = roomName;
     }
 
-    public String getQRcode() {
-        return QRcode;
+    public String getQrcode() {
+        return qrcode;
     }
 
-    public void setQRcode(String QRcode) {
-        this.QRcode = QRcode;
+    public void setQrcode(String qrcode) {
+        this.qrcode = qrcode;
     }
 
     public String getTYPE() {

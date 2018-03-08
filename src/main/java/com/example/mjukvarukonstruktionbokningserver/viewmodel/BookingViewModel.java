@@ -1,5 +1,7 @@
 package com.example.mjukvarukonstruktionbokningserver.viewmodel;
 
+import java.util.Date;
+
 public class BookingViewModel {
 
     private String userName;
@@ -12,14 +14,20 @@ public class BookingViewModel {
 
     private String roomname;
 
-    private String date;
+    private boolean checkeded;
 
-    public BookingViewModel(String userName, String secondaryUserName, float startTime, float endTime, String roomname, String date) {
+    private boolean secondaryChecked;
+
+    private Date date;
+
+    public BookingViewModel(String userName, String secondaryUserName, float startTime, float endTime, String roomname, boolean checkeded, boolean secondaryChecked, Date date) {
         this.userName = userName;
         SecondaryUserName = secondaryUserName;
         this.startTime = startTime;
         this.endTime = endTime;
         this.roomname = roomname;
+        this.checkeded = checkeded;
+        this.secondaryChecked = secondaryChecked;
         this.date = date;
     }
 
@@ -63,11 +71,27 @@ public class BookingViewModel {
         this.roomname = roomname;
     }
 
-    public String getDate() {
+    public boolean isCheckeded() {
+        return checkeded;
+    }
+
+    public void setCheckeded(boolean checkeded) {
+        this.checkeded = checkeded;
+    }
+
+    public boolean isSecondaryChecked() {
+        return secondaryChecked;
+    }
+
+    public void setSecondaryChecked(boolean secondaryChecked) {
+        this.secondaryChecked = secondaryChecked;
+    }
+
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(Date date) {
         this.date = date;
     }
 }

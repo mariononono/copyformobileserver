@@ -25,9 +25,14 @@ public class UserController {
 
     // Create a new User
     @PostMapping("/user/login/create")
-    public User createUser(@Valid @RequestBody User user) {
+    public boolean createUser(@Valid @RequestBody User user) {
+        User isexisting = userRepository.findByUserName(user.getUserName());
+
+        if(isexisting != null) {
+            return false;
+        }
         User u = userRepository.save(user);
-        return u;
+        return true;
     }
 
     // Get a Single User
@@ -43,21 +48,21 @@ public class UserController {
 
     // Update a Booking
     @PutMapping("/admin/user/adminpreferences/{user_name}")
-    public ResponseEntity<UserViewModel> updateUser(@PathVariable(value = "user_name") String user_name,
-                                                          @Valid @RequestBody UserViewModel userDetails) {
+    public boolean updateUser(@PathVariable(value = "user_name") String user_name,
+                                                          @Valid @RequestBody User userDetails) {
         User user = userRepository.findByUserName(user_name);
         if(user == null) {
-            return ResponseEntity.notFound().build();
+            return false;
         }
 
-        user.setUserName(userDetails.getUsername());
+        user.setUserName(userDetails.getUserName());
         user.setAffiliation(userDetails.getAffiliation());
         user.setAdmin(userDetails.isAdmin());
         user.setHours(userDetails.getHours());
 
         User updateduser = userRepository.save(user);
         UserViewModel userViewModel = new UserViewModel(updateduser.getUserName(), updateduser.getAffiliation(), updateduser.isAdmin(), updateduser.getHours());
-        return ResponseEntity.ok(userDetails);
+        return true;
     }
 
     private List<UserViewModel> convertToViewModel(List<User> users) {

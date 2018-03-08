@@ -31,9 +31,13 @@ public class TimeIntervalController {
 
     // Create a new Room
     @PostMapping("/timeInterval/create")
-    public TimeInterval createNote(@Valid @RequestBody TimeInterval timeInterval) {
+    public boolean createNote(@Valid @RequestBody TimeInterval timeInterval) {
+        TimeInterval isexisting = timeIntervalRepository.findByStartTimeAndStopTime(timeInterval.getStartTime(), timeInterval.getStopTime());
+        if(isexisting != null)
+            return false;
+
         TimeInterval t = timeIntervalRepository.save(timeInterval);
-        return t;
+        return true;
     }
 
     // Get a Single Room
@@ -51,20 +55,20 @@ public class TimeIntervalController {
 
     // Update a Room
     @PutMapping("/timeInterval/update/{starttime}/{endtime}")
-    public ResponseEntity<TimeIntervalViewModel> updateNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime,
+    public boolean updateNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime,
                                            @Valid @RequestBody TimeInterval timeIntervalDetails) {
         TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {
-            return ResponseEntity.notFound().build();
+            return false;
         }
         timeInterval.setStartTime(timeIntervalDetails.getStartTime());
         timeInterval.setStopTime(timeIntervalDetails.getStopTime());
 
         TimeInterval updatedtimeInterval = timeIntervalRepository.save(timeInterval);
 
-        TimeIntervalViewModel timeIntervalViewModel = new TimeIntervalViewModel(updatedtimeInterval.getStartTime(), updatedtimeInterval.getStopTime());
+        //TimeIntervalViewModel timeIntervalViewModel = new TimeIntervalViewModel(updatedtimeInterval.getStartTime(), updatedtimeInterval.getStopTime());
 
-        return ResponseEntity.ok(timeIntervalViewModel);
+        return true;
     }
 
     // Delete a Room
@@ -73,7 +77,6 @@ public class TimeIntervalController {
         TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {
             return false;
-
         }
 
         timeIntervalRepository.delete(timeInterval);

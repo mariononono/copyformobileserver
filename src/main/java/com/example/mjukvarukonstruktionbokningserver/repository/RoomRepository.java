@@ -18,6 +18,8 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
 
     Room findByRoomName(String RoomName);
 
+    Room findByQrcode(String qrcode);
+
     @Transactional
     @Query("select distinct u.floor from Room u")
     List<Integer> findByFloor();

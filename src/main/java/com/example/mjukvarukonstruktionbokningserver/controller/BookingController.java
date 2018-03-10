@@ -51,11 +51,11 @@ public class BookingController {
     @PostMapping("/bookings/create")
     public boolean createBooking(@Valid @RequestBody Booking booking) {
         User user = userRepository.findByUserName(booking.getUserName());
+        User seconduser = userRepository.findByUserName(booking.getSecondaryUserName());
+
         if (user != null) {
 
-            User seconduser = userRepository.findByUserName(booking.getSecondaryUserName());
-
-            if (seconduser != null) {
+            if (seconduser != null  || user.getAffiliation().equals("teacher") || user.isAdmin() && !seconduser.getAffiliation().equals("teacher")) {
 
                 if (user.isAdmin() || user.getAffiliation().equals("teacher")) {
                     booking.setChecked(true);
@@ -109,7 +109,7 @@ public class BookingController {
         int third = cal.get(Calendar.WEEK_OF_YEAR);
 
         List<AdminSettings> adminSettings = adminSettingsRepository.findAll();
-        if (adminSettings == null)
+        if (adminSettings.isEmpty())
             return false;
 
         if (adminSettings.size() > 1) {
@@ -141,10 +141,22 @@ public class BookingController {
             } else {
                 return false;
             }
+            hoursleft = seconduser.getFirsthours();
+            if ((hoursleft - hoursToReduce) >= 0) {
+                seconduser.setFirsthours(hoursleft - hoursToReduce);
+            } else {
+                return false;
+            }
         } else if (bookingweek == second) {
             hoursleft = user.getSecondhours();
             if ((hoursleft - hoursToReduce) >= 0) {
                 user.setSecondhours(hoursleft - hoursToReduce);
+            } else {
+                return false;
+            }
+            hoursleft = seconduser.getSecondhours();
+            if ((hoursleft - hoursToReduce) >= 0) {
+                seconduser.setSecondhours(hoursleft - hoursToReduce);
             } else {
                 return false;
             }
@@ -155,8 +167,14 @@ public class BookingController {
             } else {
                 return false;
             }
+            hoursleft = seconduser.getThirdhours();
+            if ((hoursleft - hoursToReduce) >= 0) {
+                seconduser.setThirdhours(hoursleft - hoursToReduce);
+            } else {
+                return false;
+            }
         } else {
-            throw new IllegalArgumentException();
+            return false;
         }
 
         Booking b = bookingRepository.save(booking);
@@ -270,6 +288,10 @@ public class BookingController {
     @DeleteMapping("/bookings/deletebooking/")
     public boolean deleteBooking(@Valid @RequestBody Booking bookingDetails) {
         Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(bookingDetails.getUserName(), bookingDetails.getDate(), bookingDetails.getStartTime());
+
+        if (booking == null) {
+            booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(bookingDetails.getSecondaryUserName(), bookingDetails.getDate(), bookingDetails.getStartTime());
+        }
 
         if (booking == null) {
             return false;

@@ -1,6 +1,7 @@
 package com.example.mjukvarukonstruktionbokningserver.controller;
 
 import com.example.mjukvarukonstruktionbokningserver.model.AdminSettings;
+import com.example.mjukvarukonstruktionbokningserver.model.Booking;
 import com.example.mjukvarukonstruktionbokningserver.model.User;
 import com.example.mjukvarukonstruktionbokningserver.repository.AdminSettingsRepository;
 import com.example.mjukvarukonstruktionbokningserver.repository.UserRepository;
@@ -33,19 +34,19 @@ public class UserController {
 
     // Create a new User
     @PostMapping("/user/login/create")
-    public boolean createUser(@Valid @RequestBody User user) {
+    public ResponseEntity<UserViewModel> createUser(@Valid @RequestBody User user) {
         User isexisting = userRepository.findByUserName(user.getUserName());
 
         if(isexisting != null) {
-            return false;
+            return ResponseEntity.notFound().build();
         }
 
         List<AdminSettings> adminSettings = adminSettingsRepository.findAll();
-        if(adminSettings == null)
-            return false;
+        if(adminSettings.isEmpty())
+            return ResponseEntity.notFound().build();
 
         if(adminSettings.size() > 1) {
-            return false;
+            return ResponseEntity.notFound().build();
         }
 
         int maxhours = adminSettings.get(0).getMaxhours();
@@ -69,7 +70,8 @@ public class UserController {
         user.setThirdhours(maxhours);
 
         User u = userRepository.save(user);
-        return true;
+        UserViewModel userViewModel = new UserViewModel(u.getUserName(), u.getAffiliation(), u.isAdmin(), u.getFirsthours(), u.getSecondhours(), u.getThirdhours());
+        return ResponseEntity.ok().body(userViewModel);
     }
 
     // Get a Single User

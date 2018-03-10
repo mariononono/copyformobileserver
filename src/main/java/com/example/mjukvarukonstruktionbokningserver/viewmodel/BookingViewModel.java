@@ -71,12 +71,12 @@ public class BookingViewModel {
         this.roomname = roomname;
     }
 
-    public boolean isCheckeded() {
+    public boolean isChecked() {
         return checked;
     }
 
-    public void setCheckeded(boolean checkeded) {
-        this.checked = checkeded;
+    public void setChecked(boolean checked) {
+        this.checked = checked;
     }
 
     public boolean isSecondaryChecked() {

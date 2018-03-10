@@ -27,7 +27,7 @@ public class AdminSettingsController {
     @PostMapping("/admin/adminsettings/setmaxhour")
     public boolean createMaxHour(@Valid @RequestBody AdminSettings adminSettings) {
         List<AdminSettings> isexisting = adminSettingsRepository.findAll();
-        if(isexisting != null)
+        if(!isexisting.isEmpty())
             return false;
 
         AdminSettings a = adminSettingsRepository.save(adminSettings);
@@ -45,12 +45,12 @@ public class AdminSettingsController {
     public boolean updateMaxhours(@PathVariable(value = "maxhours") int newmaxhours) {
         List<User> allusers = userRepository.findAll();
 
-        if(allusers == null) {
+        if(allusers.isEmpty()) {
             return false;
         }
 
         List<AdminSettings> adminSettings = adminSettingsRepository.findAll();
-        if(adminSettings == null)
+        if(adminSettings.isEmpty())
             return false;
 
         if(adminSettings.size() > 1) {

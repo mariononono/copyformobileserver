@@ -24,8 +24,18 @@ public class User implements Serializable {
     @Column(name = "isadmin")
     private boolean isAdmin;
 
-    @Column(name = "hours")
-    private String hours;
+    @Column(name = "currentweek")
+    private int currentweek;
+
+    @Column(name = "firstweek")
+    private int firsthours;
+
+    @Column(name = "secondweek")
+    private int secondhours;
+
+    @Column(name = "thirdweek")
+    private int thirdhours;
+
 
     public int getId() {
         return Id;
@@ -59,11 +69,36 @@ public class User implements Serializable {
         isAdmin = admin;
     }
 
-    public String getHours() {
-        return hours;
+    public int getCurrentweek() {
+        return currentweek;
     }
 
-    public void setHours(String hours) {
-        this.hours = hours;
+    public void setCurrentweek(int currentweek) {
+        this.currentweek = currentweek;
     }
+
+    public int getFirsthours() {
+        return firsthours;
+    }
+
+    public void setFirsthours(int firsthours) {
+        this.firsthours = firsthours;
+    }
+
+    public int getSecondhours() {
+        return secondhours;
+    }
+
+    public void setSecondhours(int secondhours) {
+        this.secondhours = secondhours;
+    }
+
+    public int getThirdhours() {
+        return thirdhours;
+    }
+
+    public void setThirdhours(int thirdhours) {
+        this.thirdhours = thirdhours;
+    }
+
 }

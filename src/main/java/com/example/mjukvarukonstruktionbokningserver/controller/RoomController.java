@@ -73,9 +73,17 @@ public class RoomController {
 
     // Get a Single Room
     @GetMapping("/rooms/{date}/{startTime}")
-    public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date, @PathVariable(value = "startTime") float starttime) {
+    public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") String datestring, @PathVariable(value = "startTime") float starttime) {
 
         deleteIfNecesseary();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = null;
+        try {
+            date = dateFormat.parse(datestring);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
         List<Room> rooms = roomRepository.findAll();
         List<Booking> bookings = bookingRepository.findBookingByDateAndStartTime(date, starttime);

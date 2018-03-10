@@ -8,13 +8,19 @@ public class UserViewModel {
 
     private boolean isAdmin;
 
-    private String hours;
+    private int firsthours;
 
-    public UserViewModel(String username, String affiliation, boolean isAdmin, String hours) {
+    private int secondhours;
+
+    private int thirdhours;
+
+    public UserViewModel(String username, String affiliation, boolean isAdmin, int firsthours, int secondhours, int thirdhours) {
         this.username = username;
         this.affiliation = affiliation;
         this.isAdmin = isAdmin;
-        this.hours = hours;
+        this.firsthours = firsthours;
+        this.secondhours = secondhours;
+        this.thirdhours = thirdhours;
     }
 
     public String getUsername() {
@@ -41,11 +47,28 @@ public class UserViewModel {
         isAdmin = admin;
     }
 
-    public String getHours() {
-        return hours;
+    public int getFirsthours() {
+        return firsthours;
     }
 
-    public void setHours(String hours) {
-        this.hours = hours;
+    public void setFirsthours(int firsthours) {
+        this.firsthours = firsthours;
     }
+
+    public int getSecondhours() {
+        return secondhours;
+    }
+
+    public void setSecondhours(int secondhours) {
+        this.secondhours = secondhours;
+    }
+
+    public int getThirdhours() {
+        return thirdhours;
+    }
+
+    public void setThirdhours(int thirdhours) {
+        this.thirdhours = thirdhours;
+    }
+
 }

@@ -14,19 +14,19 @@ public class BookingViewModel {
 
     private String roomname;
 
-    private boolean checkeded;
+    private boolean checked;
 
     private boolean secondaryChecked;
 
-    private Date date;
+    private String date;
 
-    public BookingViewModel(String userName, String secondaryUserName, float startTime, float endTime, String roomname, boolean checkeded, boolean secondaryChecked, Date date) {
+    public BookingViewModel(String userName, String secondaryUserName, float startTime, float endTime, String roomname, boolean checked, boolean secondaryChecked, String date) {
         this.userName = userName;
         SecondaryUserName = secondaryUserName;
         this.startTime = startTime;
         this.endTime = endTime;
         this.roomname = roomname;
-        this.checkeded = checkeded;
+        this.checked = checked;
         this.secondaryChecked = secondaryChecked;
         this.date = date;
     }
@@ -72,11 +72,11 @@ public class BookingViewModel {
     }
 
     public boolean isCheckeded() {
-        return checkeded;
+        return checked;
     }
 
     public void setCheckeded(boolean checkeded) {
-        this.checkeded = checkeded;
+        this.checked = checkeded;
     }
 
     public boolean isSecondaryChecked() {
@@ -87,11 +87,11 @@ public class BookingViewModel {
         this.secondaryChecked = secondaryChecked;
     }
 
-    public Date getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(String date) {
         this.date = date;
     }
 }

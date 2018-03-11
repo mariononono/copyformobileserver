@@ -34,7 +34,7 @@ public class AdminSettingsController {
         return true;
     }
 
-    @PutMapping("/admin/adminsettings/addadmin/{username}")
+    @PutMapping("/admin/adminsettings/addadmin/{username}/")
     public boolean addAdmin(@PathVariable(value = "username") String username) {
         User user = userRepository.findByUserName(username);
         if(user == null)
@@ -44,7 +44,7 @@ public class AdminSettingsController {
         return true;
     }
 
-    @PutMapping("/admin/adminsettings/removeadmin/{username}")
+    @PutMapping("/admin/adminsettings/removeadmin/{username}/")
     public boolean removeAdmin(@PathVariable(value = "username") String username) {
         User user = userRepository.findByUserName(username);
         if(user == null)
@@ -61,7 +61,7 @@ public class AdminSettingsController {
         return adminSettingsViewModels;
     }
 
-    @PutMapping("/admin/adminsettings/changemaxtime/{maxhours}")
+    @PutMapping("/admin/adminsettings/changemaxtime/{maxhours}/")
     public boolean updateMaxhours(@PathVariable(value = "maxhours") int newmaxhours) {
         List<User> allusers = userRepository.findAll();
 
@@ -103,7 +103,7 @@ public class AdminSettingsController {
         return true;
     }
 
-    @DeleteMapping("admin/adminsettings/deletemaxhour/{maxhour}")
+    @DeleteMapping("admin/adminsettings/deletemaxhour/{maxhour}/")
     public boolean deleteMaxhour(@PathVariable(value = "maxhours") int deletemaxhours) {
         AdminSettings adminSettings = adminSettingsRepository.findByMaxhours(deletemaxhours);
         if(adminSettings == null) {

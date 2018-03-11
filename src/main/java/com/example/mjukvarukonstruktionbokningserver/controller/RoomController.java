@@ -55,7 +55,7 @@ public class RoomController {
         return true;
     }
 
-    @GetMapping("/admin/rooms/{room_name}")
+    @GetMapping("/admin/rooms/{room_name}/")
     public ResponseEntity<Room> getRoomByRoomname(@PathVariable(value = "room_name") int room_name) {
         Room room = roomRepository.findOne(room_name);
         if(room == null) {
@@ -64,7 +64,7 @@ public class RoomController {
         return ResponseEntity.ok().body(room);
     }
 
-    @GetMapping("/admin/rooms/floors/{floor}")
+    @GetMapping("/admin/rooms/floors/{floor}/")
     public List<RoomViewModel> getRoomByFloor(@PathVariable(value = "floor") int floor) {
         List<Room> rooms = roomRepository.findByFloor(floor);
         List<RoomViewModel> roomViewModels = convertToViewModel(rooms);
@@ -72,7 +72,7 @@ public class RoomController {
     }
 
     // Get a Single Room
-    @GetMapping("/rooms/{date}/{startTime}")
+    @GetMapping("/rooms/{date}/{startTime}/")
     public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") String datestring, @PathVariable(value = "startTime") float starttime) {
 
         deleteIfNecesseary();
@@ -91,8 +91,17 @@ public class RoomController {
 
         for(int i = 0;i<rooms.size();i++) {
             for(int j=0;j<bookings.size();j++) {
-                if(rooms.get(i).getRoomName().equals(bookings.get(j).getRoomname()))
-                    rooms.remove(i);
+                String[] tmpusermail = bookings.get(i).getUserName().split("@");
+                if (tmpusermail[1].equals("kth.se")) {
+                    if (rooms.get(i).getRoomName().equals(bookings.get(j).getRoomname()) || !rooms.get(i).isBookableKTH())
+                        rooms.remove(i);
+                } else if(tmpusermail[1].equals("rkh.se")) {
+                    if (rooms.get(i).getRoomName().equals(bookings.get(j).getRoomname()) || !rooms.get(i).isBookableRKH())
+                        rooms.remove(i);
+                }
+                else {
+                    return null;
+                }
             }
         }
 
@@ -102,7 +111,7 @@ public class RoomController {
     }
 
     // Update a Room
-    @PutMapping("/admin/updaterooms/{roomname}")
+    @PutMapping("/admin/updaterooms/{roomname}/")
     public boolean updateRoom(@PathVariable(value = "roomname") String roomname,
                                            @Valid @RequestBody Room roomDetails) {
         Room room = roomRepository.findByRoomName(roomname);
@@ -122,7 +131,7 @@ public class RoomController {
     }
 
     // Delete a Room
-    @DeleteMapping("/admin/deleterooms/{roomname}")
+    @DeleteMapping("/admin/deleterooms/{roomname}/")
     public boolean deleteRoom(@PathVariable(value = "roomname") String roomname) {
         Room room = roomRepository.findByRoomName(roomname);
         if(room == null) {

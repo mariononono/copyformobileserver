@@ -76,7 +76,7 @@ public class UserController {
     }
 
     // Get a Single User
-    @GetMapping("/admin/user/{user_name}")
+    @GetMapping("/admin/user/{user_name}/")
     public ResponseEntity<UserViewModel> getBookingById(@PathVariable(value = "user_name") String user_name) {
         User user = userRepository.findByUserName(user_name);
         if(user == null) {
@@ -87,7 +87,7 @@ public class UserController {
     }
 
     // Update a Booking
-    @PutMapping("/admin/user/adminpreferences/{user_name}")
+    @PutMapping("/admin/user/adminpreferences/{user_name}/")
     public boolean updateUser(@PathVariable(value = "user_name") String user_name,
                                                           @Valid @RequestBody User userDetails) {
         User user = userRepository.findByUserName(user_name);

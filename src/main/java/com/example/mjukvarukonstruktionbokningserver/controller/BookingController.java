@@ -264,8 +264,9 @@ public class BookingController {
     }
 
     // Delete booking
-    @DeleteMapping("/bookings/deletebooking/")
-    public boolean deleteBooking(@Valid @RequestBody Booking bookingDetails) {
+    @DeleteMapping("/bookings/deletebooking/{username}/")
+    public boolean deleteBooking(@PathVariable(value = "username") String username,
+            @Valid @RequestBody Booking bookingDetails) {
         Booking booking = bookingRepository.findBookingByUserNameAndDateAndStartTimeEquals(bookingDetails.getUserName(), bookingDetails.getDate(), bookingDetails.getStartTime());
 
         if (booking == null) {
@@ -346,6 +347,10 @@ public class BookingController {
             seconduser.setThirdhours(thirdh);
         } else {
             return false;
+        }
+
+        if(!username.equals(booking.getUserName()) || !username.equals(booking.getSecondaryUserName())) {
+            //skicka mail
         }
 
         bookingRepository.delete(booking);

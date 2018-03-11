@@ -41,7 +41,7 @@ public class TimeIntervalController {
     }
 
     // Get a Single Room
-    @GetMapping("/timeInterval/getsingle/{starttime}/{endtime}")
+    @GetMapping("/timeInterval/getsingle/{starttime}/{endtime}/")
     public ResponseEntity<TimeIntervalViewModel> getNoteById(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime) {
         TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {
@@ -54,7 +54,7 @@ public class TimeIntervalController {
     }
 
     // Update a Room
-    @PutMapping("/timeInterval/update/{starttime}/{endtime}")
+    @PutMapping("/timeInterval/update/{starttime}/{endtime}/")
     public boolean updateNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime,
                                            @Valid @RequestBody TimeInterval timeIntervalDetails) {
         TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
@@ -72,7 +72,7 @@ public class TimeIntervalController {
     }
 
     // Delete a Room
-    @DeleteMapping("/timeInterval/delete/{starttime}/{endtime}")
+    @DeleteMapping("/timeInterval/delete/{starttime}/{endtime}/")
     public boolean deleteNote(@PathVariable(value = "starttime") float starttime, @PathVariable(value = "endtime") float endtime) {
         TimeInterval timeInterval = timeIntervalRepository.findByStartTimeAndStopTime(starttime, endtime);
         if(timeInterval == null) {

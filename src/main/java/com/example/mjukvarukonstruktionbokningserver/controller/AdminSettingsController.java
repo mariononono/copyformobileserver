@@ -41,6 +41,7 @@ public class AdminSettingsController {
             return false;
 
         user.setAdmin(true);
+        User u = userRepository.save(user);
         return true;
     }
 
@@ -51,6 +52,7 @@ public class AdminSettingsController {
             return false;
 
         user.setAdmin(false);
+        User u = userRepository.save(user);
         return true;
     }
 

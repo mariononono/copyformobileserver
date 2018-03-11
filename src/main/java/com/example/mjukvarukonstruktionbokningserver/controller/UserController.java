@@ -38,7 +38,8 @@ public class UserController {
         User isexisting = userRepository.findByUserName(user.getUserName());
 
         if(isexisting != null) {
-            return ResponseEntity.notFound().build();
+            UserViewModel userViewModel = new UserViewModel(isexisting.getUserName(), isexisting.getAffiliation(), isexisting.isAdmin(), isexisting.getFirsthours(), isexisting.getSecondhours(), isexisting.getThirdhours());
+            return ResponseEntity.ok().body(userViewModel);
         }
 
         List<AdminSettings> adminSettings = adminSettingsRepository.findAll();

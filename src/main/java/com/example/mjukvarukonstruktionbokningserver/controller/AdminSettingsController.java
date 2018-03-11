@@ -34,6 +34,26 @@ public class AdminSettingsController {
         return true;
     }
 
+    @PutMapping("/admin/adminsettings/addadmin/{username}")
+    public boolean addAdmin(@PathVariable(value = "username") String username) {
+        User user = userRepository.findByUserName(username);
+        if(user == null)
+            return false;
+
+        user.setAdmin(true);
+        return true;
+    }
+
+    @PutMapping("/admin/adminsettings/removeadmin/{username}")
+    public boolean removeAdmin(@PathVariable(value = "username") String username) {
+        User user = userRepository.findByUserName(username);
+        if(user == null)
+            return false;
+
+        user.setAdmin(false);
+        return true;
+    }
+
     // Get All Rooms
     @GetMapping("/admin/adminsettings/getmaxhour")
     public List<AdminSettingsViewModel> getAllMaxhours() {
@@ -59,11 +79,19 @@ public class AdminSettingsController {
 
         int currenthours = adminSettings.get(0).getMaxhours();
 
+        int first = 0;
+        int second = 0;
+        int third = 0;
+
         if(currenthours < newmaxhours) {
             for(User user: allusers) {
-                userRepository.updateFirstWeekHours(user.getUserName(), (newmaxhours - currenthours));
-                userRepository.updateSecondWeekHours(user.getUserName(), (newmaxhours - currenthours));
-                userRepository.updateThirdWeekHours(user.getUserName(), (newmaxhours - currenthours));
+                first = user.getFirsthours();
+                second = user.getSecondhours();
+                third = user.getThirdhours();
+
+                user.setFirsthours(first + (newmaxhours - currenthours));
+                user.setSecondhours(second + (newmaxhours - currenthours));
+                user.setThirdhours(third + (newmaxhours - currenthours));
             }
 
         }

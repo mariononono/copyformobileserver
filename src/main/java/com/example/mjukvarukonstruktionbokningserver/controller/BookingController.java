@@ -108,30 +108,9 @@ public class BookingController {
         cal.add(cal.DATE, +14);
         int third = cal.get(Calendar.WEEK_OF_YEAR);
 
-        List<AdminSettings> adminSettings = adminSettingsRepository.findAll();
-        if (adminSettings.isEmpty())
+        if (!rearrangeIfNecessary(user, seconduser, current, second, third))
             return false;
 
-        if (adminSettings.size() > 1) {
-            return false;
-        }
-
-        int maxhours = adminSettings.get(0).getMaxhours();
-
-        if (current == user.getCurrentweek()) {
-        } else if (second == user.getCurrentweek()) {
-            user.setFirsthours(user.getSecondhours());
-            user.setSecondhours(user.getThirdhours());
-            user.setThirdhours(maxhours);
-        } else if (third == user.getCurrentweek()) {
-            user.setFirsthours(user.getThirdhours());
-            user.setSecondhours(maxhours);
-            user.setThirdhours(maxhours);
-        } else {
-            user.setFirsthours(maxhours);
-            user.setSecondhours(maxhours);
-            user.setThirdhours(maxhours);
-        }
         int hoursleft = 0;
         int hoursToReduce = (int) (booking.getEndTime()-booking.getStartTime());
         if (bookingweek == current) {
@@ -218,7 +197,7 @@ public class BookingController {
 
     // testa med post... eller sök på put
     @PutMapping("/bookings/checkin/{username}/{date}/{starttime}/{qr}/")
-    public ResponseEntity<BookingViewModel> updateBooking(@PathVariable(value = "username") String username, String datestring, @PathVariable(value = "starttime") float starttime, @PathVariable(value = "qr") String qr) {
+    public ResponseEntity<BookingViewModel> updateBooking(@PathVariable(value = "username") String username, @PathVariable(value = "date") String datestring, @PathVariable(value = "starttime") float starttime, @PathVariable(value = "qr") String qr) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = null;
         try {
@@ -306,15 +285,17 @@ public class BookingController {
         String[] tmparraybefore = tmpbefore.split("\\.");
 
         Date rightnow = Calendar.getInstance().getTime();
-
         Date rnow = new Date();
+        Date bookingDate = null;
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         SimpleDateFormat parser = new SimpleDateFormat("HH:mm");
         String timenow = parser.format(rightnow);
         String dateNow = dateFormat.format(rnow);
+        String bookingD = dateFormat.format(booking.getDate());
 
         try {
+            bookingDate = dateFormat.parse(bookingD);
             Date now = dateFormat.parse(dateNow);
             Date userTime = parser.parse(timenow);
             Date startTime = parser.parse(tmparraystart[0] + ":00");
@@ -325,6 +306,46 @@ public class BookingController {
             }
         } catch (ParseException e) {
             e.printStackTrace();
+        }
+
+        Calendar bookingCal = Calendar.getInstance();
+        bookingCal.setTime(bookingDate);
+
+        Calendar cal = Calendar.getInstance();
+
+        int bookingweek = bookingCal.get(Calendar.WEEK_OF_YEAR);
+        int current = cal.get(Calendar.WEEK_OF_YEAR);
+        cal.add(cal.DATE, +7);
+        int second = cal.get(Calendar.WEEK_OF_YEAR);
+        cal.add(cal.DATE, +14);
+        int third = cal.get(Calendar.WEEK_OF_YEAR);
+
+        User user = userRepository.findByUserName(booking.getUserName());
+        User seconduser = userRepository.findByUserName(booking.getSecondaryUserName());
+        if(!rearrangeIfNecessary(user, seconduser, current, second, third))
+            return false;
+
+        int firsth = 0;
+        int secondh = 0;
+        int thirdh = 0;
+
+        if (current == bookingweek) {
+            firsth = user.getFirsthours();
+            user.setFirsthours(firsth + 2);
+            firsth = seconduser.getFirsthours();
+            seconduser.setFirsthours(firsth + 2);
+        } else if (second == bookingweek) {
+            secondh = user.getSecondhours();
+            user.setFirsthours(secondh);
+            secondh = seconduser.getSecondhours();
+            seconduser.setSecondhours(secondh);
+        } else if (third == bookingweek) {
+            thirdh = user.getThirdhours();
+            user.setThirdhours(thirdh);
+            thirdh = seconduser.getThirdhours();
+            seconduser.setThirdhours(thirdh);
+        } else {
+            return false;
         }
 
         bookingRepository.delete(booking);
@@ -382,10 +403,51 @@ public class BookingController {
 
             bookingRepository.removeByDateBefore(now);
 
+
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
+    }
+
+    public boolean rearrangeIfNecessary(User user, User seconduser, int current, int second, int third) {
+        List<AdminSettings> adminSettings = adminSettingsRepository.findAll();
+        if (adminSettings.isEmpty())
+            return false;
+
+        if (adminSettings.size() > 1) {
+            return false;
+        }
+
+        int maxhours = adminSettings.get(0).getMaxhours();
+
+        if (current == user.getCurrentweek()) {
+        } else if (second == user.getCurrentweek()) {
+            user.setFirsthours(user.getSecondhours());
+            user.setSecondhours(user.getThirdhours());
+            user.setThirdhours(maxhours);
+            seconduser.setFirsthours(seconduser.getSecondhours());
+            seconduser.setSecondhours(seconduser.getThirdhours());
+            seconduser.setThirdhours(maxhours);
+            user.setCurrentweek(current);
+        } else if (third == user.getCurrentweek()) {
+            user.setFirsthours(user.getThirdhours());
+            user.setSecondhours(maxhours);
+            user.setThirdhours(maxhours);
+            seconduser.setFirsthours(seconduser.getThirdhours());
+            seconduser.setSecondhours(maxhours);
+            seconduser.setThirdhours(maxhours);
+            user.setCurrentweek(current);
+        } else {
+            user.setFirsthours(maxhours);
+            user.setSecondhours(maxhours);
+            user.setThirdhours(maxhours);
+            seconduser.setFirsthours(maxhours);
+            seconduser.setSecondhours(maxhours);
+            seconduser.setThirdhours(maxhours);
+            user.setCurrentweek(current);
+        }
+        return true;
     }
 
 }

@@ -60,6 +60,9 @@ public class AdminSettingsController {
     @GetMapping("/admin/adminsettings/getmaxhour")
     public List<AdminSettingsViewModel> getAllMaxhours() {
         List<AdminSettingsViewModel> adminSettingsViewModels = convertToViewModel(adminSettingsRepository.findAll());
+        if(adminSettingsViewModels.isEmpty()) {
+            return new ArrayList<>();
+        }
         return adminSettingsViewModels;
     }
 

@@ -1,5 +1,6 @@
 package com.example.mjukvarukonstruktionbokningserver.controller;
 
+import com.example.mjukvarukonstruktionbokningserver.commons.Sendemail;
 import com.example.mjukvarukonstruktionbokningserver.model.*;
 import com.example.mjukvarukonstruktionbokningserver.repository.*;
 import com.example.mjukvarukonstruktionbokningserver.viewmodel.BookingViewModel;
@@ -32,7 +33,9 @@ public class BookingController {
     // Get All bookings
     @GetMapping("/teacher/{date}/allbookings")
     public List<BookingViewModel> getAllBookings(@PathVariable(value = "date") String datestring) {
-        deleteIfNecesseary();
+        if(!deleteIfNecesseary()) {
+            return new ArrayList<BookingViewModel>();
+        }
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = null;
@@ -156,6 +159,8 @@ public class BookingController {
             return false;
         }
 
+        Sendemail.sendMail(seconduser.getUserName(), "booked", user.getUserName());
+
         Booking b = bookingRepository.save(booking);
 
         return true;
@@ -186,7 +191,9 @@ public class BookingController {
     // Get a my bookings
     @GetMapping("/bookings/getbooking/{username}/")
     public List<BookingViewModel> getBookingByUsername(@PathVariable(value = "username") String username) {
-        deleteIfNecesseary();
+        if(!deleteIfNecesseary()) {
+            return new ArrayList<BookingViewModel>();
+        }
 
 
         List<BookingViewModel> bookingViewModels = convertToViewModel(bookingRepository.findByUserNameEquals(username));
@@ -349,9 +356,17 @@ public class BookingController {
             return false;
         }
 
-        if(!username.equals(booking.getUserName()) || !username.equals(booking.getSecondaryUserName())) {
-            //skicka mail
-        }
+        if(!username.equals(booking.getUserName()) && !username.equals(booking.getSecondaryUserName())) {
+            if(user.getAffiliation().equals("teacher") || user.isAdmin()) {
+                return false;
+            } else {
+                Sendemail.sendMail(booking.getUserName(), "overbook", username);
+                Sendemail.sendMail(booking.getSecondaryUserName(), "overbook", username);
+            }
+        } else if(username.equals(booking.getUserName()))
+            Sendemail.sendMail(booking.getSecondaryUserName(), "removed", username);
+        else if(username.equals(booking.getSecondaryUserName()))
+            Sendemail.sendMail(booking.getUserName(), "removed", username);
 
         bookingRepository.delete(booking);
         return true;
@@ -370,7 +385,7 @@ public class BookingController {
         return bmv;
     }
 
-    public void deleteIfNecesseary() {
+    public boolean deleteIfNecesseary() {
         List<TimeInterval> timeIntervals = timeIntervalRepository.findAll();
         List<String> starttimes = new ArrayList<>();
         List<String> endtimes = new ArrayList<>();
@@ -411,8 +426,9 @@ public class BookingController {
 
         } catch (ParseException e) {
             e.printStackTrace();
+            return false;
         }
-
+        return true;
     }
 
     public boolean rearrangeIfNecessary(User user, User seconduser, int current, int second, int third) {

@@ -6,6 +6,7 @@ import com.example.mjukvarukonstruktionbokningserver.model.TimeInterval;
 import com.example.mjukvarukonstruktionbokningserver.repository.BookingRepository;
 import com.example.mjukvarukonstruktionbokningserver.repository.RoomRepository;
 import com.example.mjukvarukonstruktionbokningserver.repository.TimeIntervalRepository;
+import com.example.mjukvarukonstruktionbokningserver.viewmodel.BookingViewModel;
 import com.example.mjukvarukonstruktionbokningserver.viewmodel.RoomViewModel;
 import com.google.zxing.WriterException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,10 @@ public class RoomController {
     // Get All Rooms
     @GetMapping("/admin/listrooms")
     public List<RoomViewModel> getAllRooms() {
-        return convertToViewModel(roomRepository.findAll());
+        List<Room> rooms = roomRepository.findAll();
+        if(rooms.isEmpty())
+            return new ArrayList<>();
+        return convertToViewModel(rooms);
     }
 
     // Create a new Room
@@ -75,7 +79,9 @@ public class RoomController {
     @GetMapping("/rooms/{date}/{startTime}/")
     public List<RoomViewModel> getAvailableRooms(@PathVariable(value = "date") String datestring, @PathVariable(value = "startTime") float starttime) {
 
-        deleteIfNecesseary();
+        if(!deleteIfNecesseary()) {
+            return new ArrayList<RoomViewModel>();
+        }
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = null;
@@ -86,22 +92,15 @@ public class RoomController {
         }
 
         List<Room> rooms = roomRepository.findAll();
+        if(rooms.isEmpty()) {
+            return new ArrayList<RoomViewModel>();
+        }
         List<Booking> bookings = bookingRepository.findBookingByDateAndStartTime(date, starttime);
-
 
         for(int i = 0;i<rooms.size();i++) {
             for(int j=0;j<bookings.size();j++) {
-                String[] tmpusermail = bookings.get(i).getUserName().split("@");
-                if (tmpusermail[1].equals("kth.se")) {
-                    if (rooms.get(i).getRoomName().equals(bookings.get(j).getRoomname()) || !rooms.get(i).isBookableKTH())
+                    if (rooms.get(i).getRoomName().equals(bookings.get(j).getRoomname()))
                         rooms.remove(i);
-                } else if(tmpusermail[1].equals("rkh.se")) {
-                    if (rooms.get(i).getRoomName().equals(bookings.get(j).getRoomname()) || !rooms.get(i).isBookableRKH())
-                        rooms.remove(i);
-                }
-                else {
-                    return null;
-                }
             }
         }
 
@@ -149,7 +148,7 @@ public class RoomController {
         return floors;
     }
 
-    public void deleteIfNecesseary(){
+    public boolean deleteIfNecesseary(){
         List<TimeInterval> timeIntervals = timeIntervalRepository.findAll();
         List<String> starttimes = new ArrayList<>();
         List<String> endtimes = new ArrayList<>();
@@ -189,8 +188,10 @@ public class RoomController {
 
         } catch (ParseException e) {
             e.printStackTrace();
+            return false;
         }
 
+        return true;
     }
 
     private List<RoomViewModel> convertToViewModel(List<Room> rooms) {

@@ -43,14 +43,13 @@ public class UserController {
         }
 
         List<AdminSettings> adminSettings = adminSettingsRepository.findAll();
+        int maxhours = 0;
         if(adminSettings.isEmpty())
+            maxhours = 6;
+        else if(adminSettings.size() > 1)
             return ResponseEntity.notFound().build();
-
-        if(adminSettings.size() > 1) {
-            return ResponseEntity.notFound().build();
-        }
-
-        int maxhours = adminSettings.get(0).getMaxhours();
+        else
+            maxhours = adminSettings.get(0).getMaxhours();
 
         Date date = new Date();
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");

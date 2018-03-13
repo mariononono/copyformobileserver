@@ -58,8 +58,7 @@ public class BookingController {
 
         if (user != null) {
 
-            if (seconduser != null  || user.getAffiliation().equals("teacher") || user.isAdmin() && !seconduser.getAffiliation().equals("teacher")) {
-
+            if (seconduser != null  || user.getAffiliation().equals("teacher") || user.isAdmin()) {
                 if (user.isAdmin() || user.getAffiliation().equals("teacher")) {
                     booking.setChecked(true);
                     booking.setSecondaryChecked(true);

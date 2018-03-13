@@ -29,6 +29,7 @@ public class MessageController {
                                                    @Valid @RequestBody List<String> contacts) {
 
         String usernamesQuery = "";
+        System.out.println("me");
 
         for(String c : contacts){
             usernamesQuery += "'" + c + "'";

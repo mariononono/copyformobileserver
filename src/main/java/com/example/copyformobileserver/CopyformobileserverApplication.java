@@ -1,4 +1,4 @@
-package com.example.mjukvarukonstruktionbokningserver;
+package com.example.copyformobileserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableJpaAuditing
-public class MjukvarukonstruktionBokningserverApplication {
+public class CopyformobileserverApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(MjukvarukonstruktionBokningserverApplication.class, args);
+		SpringApplication.run(CopyformobileserverApplication.class, args);
 	}
 }

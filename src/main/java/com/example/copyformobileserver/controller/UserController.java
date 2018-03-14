@@ -27,13 +27,13 @@ public class UserController {
     }
 
     @GetMapping("/{username}/login/{password}/")
-    public boolean login(@PathVariable(value = "username") String username, @PathVariable(value = "password") String password) {
+    public String login(@PathVariable(value = "username") String username, @PathVariable(value = "password") String password) {
         User user = userRepository.findByUserNameAndPassword(username, password);
         if (user == null) {
-            return false;
+            return "fel";
         }
 
-        return true;
+        return "rätt";
     }
 
     @GetMapping("/{username}/publickey/")

@@ -12,4 +12,6 @@ public interface MessageRepository extends JpaRepository<Message, Integer> {
 
     List<Message> findDistinctByReceiverAndSenderIn(String receiver, String userQuery);
 
+
+
 }

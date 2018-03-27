@@ -2,6 +2,7 @@ package com.example.copyformobileserver.controller;
 
 import com.example.copyformobileserver.model.User;
 import com.example.copyformobileserver.repository.UserRepository;
+import com.example.copyformobileserver.viewmodel.UserViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,13 +28,13 @@ public class UserController {
     }
 
     @GetMapping("/{username}/login/{password}/")
-    public String login(@PathVariable(value = "username") String username, @PathVariable(value = "password") String password) {
+    public boolean login(@PathVariable(value = "username") String username, @PathVariable(value = "password") String password) {
         User user = userRepository.findByUserNameAndPassword(username, password);
         if (user == null) {
-            return "fel";
+            return false;
         }
 
-        return "rätt";
+        return true;
     }
 
     @GetMapping("/{username}/publickey/")
@@ -42,8 +43,8 @@ public class UserController {
         if(user == null) {
             return null;
         }
-        //PublicKey publicKey = user.getPublickey();
-        return "";
+        UserViewModel userViewModel = new UserViewModel(user.getUserName(), user.getPassword(), user.getPublickey());
+        return userViewModel.getPublickey();
     }
 
     @PostMapping("/user/register")

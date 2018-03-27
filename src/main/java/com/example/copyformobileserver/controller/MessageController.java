@@ -44,9 +44,10 @@ public class MessageController {
 
     // Create a new Booking
     @PostMapping("/message/send")
-    public Message createMessage(@Valid @RequestBody Message message) {
+    public MessageViewModel createMessage(@Valid @RequestBody Message message) {
         Message m = messageRepository.save(message);
-        return m;
+        MessageViewModel messageViewModel = new MessageViewModel(m.getSender(), m.getReceiver(), m.getMessage());
+        return messageViewModel;
     }
 
     private List<MessageViewModel> convertToViewModel(List<Message> messages) {
